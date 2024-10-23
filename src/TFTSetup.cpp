@@ -16,7 +16,7 @@ void initializeTFT()
 {
     // initialize tft
     tft.init();
-    tft.setRotation(0);
+    tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
 
     tft.setTextColor(TFT_WHITE);
