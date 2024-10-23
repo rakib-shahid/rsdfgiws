@@ -24,14 +24,15 @@ void setup()
 
 void loop()
 {
+
     // Check if the screen is being touched
     if (touch.touched())
     {
         TS_Point p = touch.getPoint(); // Get the touch coordinates
 
         // Map the touch coordinates to the screen size
-        int x = map(p.x, 0, 320, 0, tft.width());
-        int y = map(p.y, 0, 480, 0, tft.height());
+        int x = map(p.x, 0, tft_width, 0, tft.width());
+        int y = map(p.y, 0, tft_height, 0, tft.height());
 
         // Turn on the LED while touching the screen
         Serial.println("LED ON");
