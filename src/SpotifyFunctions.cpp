@@ -92,44 +92,34 @@ void refreshSpotifyTokens(const String &oldRefreshToken)
 bool adjustVolume(const String &accessToken, int adjustment)
 {
     int newVolume = spotifyData.volume + adjustment * 10;
-    if (newVolume >= 100)
-    {
+    if (newVolume > 100)
         newVolume = 100;
-        if (spotifyData.volume == 100)
-        {
-            return true;
-        }
-    }
-    else if (newVolume <= 0)
-    {
+    if (newVolume < 0)
         newVolume = 0;
-        if (spotifyData.volume == 0)
-        {
-            return true;
-        }
-    }
+
     if (newVolume == spotifyData.volume)
     {
         return true;
     }
 
     spotifyData.volume = newVolume;
+
     String url = "https://api.spotify.com/v1/me/player/volume?volume_percent=" + String(newVolume);
     http.begin(url);
     http.addHeader("Authorization", "Bearer " + accessToken);
     http.addHeader("Content-Length", "0");
-    // http.addHeader("Connection", "keep-alive");
+
     int httpResponseCode = http.PUT("");
+    http.end();
+
     if (httpResponseCode == 204)
     {
-        http.end();
         return true;
     }
     else
     {
         Serial.println("Failed to adjust volume. HTTP response code: " + String(httpResponseCode));
         Serial.println("Response: " + http.getString());
-        http.end();
         return false;
     }
 }
