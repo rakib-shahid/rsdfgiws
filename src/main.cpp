@@ -1,4 +1,8 @@
 #include "TFTSetup.h"
+#include "Secrets.h"
+#include "TokenManager.h"
+#include "SpotifyFunctions.h"
+#include "WifiSetup.h"
 
 const int ledPin = 27;
 
@@ -7,6 +11,31 @@ void setup()
     Serial.begin(115200);
     initializeTFT();
     initializeTouch();
+
+    setupWifi(tft);
+
+    // token stuff
+    initializeFileSystem();
+    readAccessToken(tokenFileName);
+    // check token validity:
+    if (!isAccessTokenValid(accessToken))
+    {
+        Serial.println("Access token is invalid. Refreshing...");
+        if (!isRefreshTokenValid())
+        {
+            Serial.println("Refresh token is invalid. Getting new auth code...");
+            getAuthorizationCode();
+        }
+        else
+        {
+            Serial.println("Refresh token is valid. Exchanging for new access token...");
+            refreshSpotifyTokens(refreshToken);
+        }
+    }
+    else
+    {
+        Serial.println("Access token is valid.");
+    }
 
     pinMode(ledPin, OUTPUT);
     digitalWrite(ledPin, LOW);
