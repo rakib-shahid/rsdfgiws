@@ -25,12 +25,12 @@ struct SpotifyData
 extern struct SpotifyData spotifyData;
 extern HTTPClient http;
 
-// bool getCurrentlyPlayingTrack(const String &accessToken);
-// void refreshSpotifyTokens(const String &refreshToken);
-// bool adjustVolume(const String &accessToken, int adjustment);
-// bool togglePlay(const String &accessToken);
-// bool togglePause(const String &accessToken);
-// bool skipToNextTrack(const String &accessToken);
-// bool skipToPreviousTrack(const String &accessToken);
+bool getCurrentlyPlayingTrack(const String &accessToken);
+void refreshSpotifyTokens(const String &refreshToken);
+bool adjustVolume(const String &accessToken, int adjustment);
+bool togglePlay(const String &accessToken);
+bool togglePause(const String &accessToken);
+bool skipToNextTrack(const String &accessToken);
+bool skipToPreviousTrack(const String &accessToken);
 
 #endif // SPOTIFY_FUNCTIONS_H

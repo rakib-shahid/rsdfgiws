@@ -2,15 +2,15 @@
 #include <ESP32Ping.h>
 #include <TFT_eSPI.h>
 
+AsyncWebServer server(80);
+DNSServer dns;
+
 bool setupWifi(TFT_eSPI &tft)
 {
-    // Create an instance of the WiFiManager library
-    WiFiManager wifiManager;
+    AsyncWiFiManager wifiManager(&server, &dns);
 
-    // Set the name of the access point
     wifiManager.autoConnect("rsdfgiws");
 
-    // Print the IP address of the ESP32
     tft.println(WiFi.localIP());
     Serial.println(WiFi.localIP());
 

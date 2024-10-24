@@ -12,6 +12,7 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include "SpotifyFunctions.h"
+#include "WifiSetup.h"
 
 String authCode;
 String accessToken;
@@ -20,7 +21,7 @@ const char *authTokenFileName = "/authtoken.txt";
 const char *tokenFileName = "/token.txt";
 const char *accessTokenFileName = "/accesstoken.txt";
 const char *refreshTokenFileName = "/refreshtoken.txt";
-AsyncWebServer server(80);
+
 // Initialize file system
 void initializeFileSystem()
 {
