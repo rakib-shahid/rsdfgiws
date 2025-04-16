@@ -5,6 +5,8 @@
 #include "WifiSetup.h"
 
 const int ledPin = 27;
+unsigned long lastSpotifyUpdate = 0;
+const unsigned long spotifyInterval = 200;
 
 void setup()
 {
@@ -41,6 +43,7 @@ void setup()
     digitalWrite(ledPin, LOW);
 }
 
+// map coordinates since touches register weird
 void mapTouchCoordinates(int &x, int &y)
 {
     int temp;
@@ -67,6 +70,28 @@ void mapTouchCoordinates(int &x, int &y)
 
 void loop()
 {
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastSpotifyUpdate >= spotifyInterval)
+    {
+        lastSpotifyUpdate = currentMillis;
+        getCurrentlyPlayingTrack(accessToken);
+    }
+
+    if (spotifyData.is_playing && hasSongChanged(spotifyData, lastSpotifyData))
+    {
+        lastSpotifyData = spotifyData;
+        // tft.fillScreen(TFT_BLACK);
+        tft.fillRect(0, 60, tft_width, 80, TFT_BLACK);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.setTextSize(2);
+        tft.setCursor(0, 60);
+        // tft.println("Currently Playing:");
+        tft.setTextSize(1);
+        tft.println(spotifyData.name);
+        tft.println(spotifyData.artist);
+        tft.println("Volume: " + String(spotifyData.volume));
+    }
+
     if (touch.touched())
     {
         TS_Point p = touch.getPoint();
@@ -74,9 +99,12 @@ void loop()
         int y = p.y;
         mapTouchCoordinates(x, y);
         // Serial.println("LED ON");
-        digitalWrite(ledPin, HIGH);
-        Serial.printf("Touch at: %d, %d\n", x, y);
-        tft.fillCircle(x, y, 5, TFT_WHITE);
+        // if (x > 0 && y > 0)
+        // {
+        //     digitalWrite(ledPin, HIGH);
+        //     Serial.printf("Touch at: %d, %d\n", x, y);
+        //     tft.fillCircle(x, y, 5, TFT_WHITE);
+        // }
     }
     else
     {

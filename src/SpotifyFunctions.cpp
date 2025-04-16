@@ -18,6 +18,7 @@ HTTPClient http;
 
 // global struct for song data
 SpotifyData spotifyData = {"", "", false, 0, 0, 0, ""};
+SpotifyData lastSpotifyData = {"", "", false, 0, 0, 0, ""};
 
 bool getCurrentlyPlayingTrack(const String &accessToken)
 {
@@ -201,4 +202,9 @@ bool skipToPreviousTrack(const String &accessToken)
         http.end();
         return false;
     }
+}
+
+bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous)
+{
+    return current.name != previous.name || current.artist != previous.artist || current.is_playing != previous.is_playing;
 }

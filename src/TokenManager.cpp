@@ -3,11 +3,8 @@
 #include <SPIFFS.h>
 #include <TFT_eSPI.h>
 #include "Secrets.h"
-#include "TFTSetup.h"
 #include <HTTPClient.h>
 #include <Base64.h>
-#include <ESPAsyncWebServer.h>
-#include <AsyncTCP.h>
 #include <ESPmDNS.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
@@ -79,8 +76,8 @@ bool validateAuthCode()
         return false;
     }
 
-    const char *accessResponse = exchangeCodeForToken(authCode);
-    if (strlen(accessResponse) == 0)
+    String accessResponse = exchangeCodeForToken(authCode);
+    if (sizeof(accessResponse) == 0)
     {
         return false;
     }
@@ -114,7 +111,7 @@ String getToken(const String fileName)
     return token;
 }
 
-const char *exchangeCodeForToken(const String &code)
+String exchangeCodeForToken(const String &code)
 {
 
     String authHeader = "Basic " + base64::encode(String(CLIENT_ID) + ":" + String(CLIENT_SECRET));
@@ -135,7 +132,7 @@ const char *exchangeCodeForToken(const String &code)
         // Serial.println("Response: " + response);
         http.end();
         saveToken(response, tokenFileName);
-        return response.c_str();
+        return response;
     }
     else
     {
@@ -144,7 +141,7 @@ const char *exchangeCodeForToken(const String &code)
         // Serial.println("Response: " + response);
         http.end();
         String empty = "";
-        return empty.c_str();
+        return empty;
     }
 }
 

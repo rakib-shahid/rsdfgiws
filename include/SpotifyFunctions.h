@@ -23,6 +23,7 @@ struct SpotifyData
     String album_art_url;
 };
 extern struct SpotifyData spotifyData;
+extern struct SpotifyData lastSpotifyData;
 extern HTTPClient http;
 
 bool getCurrentlyPlayingTrack(const String &accessToken);
@@ -32,5 +33,6 @@ bool togglePlay(const String &accessToken);
 bool togglePause(const String &accessToken);
 bool skipToNextTrack(const String &accessToken);
 bool skipToPreviousTrack(const String &accessToken);
+bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous);
 
 #endif // SPOTIFY_FUNCTIONS_H

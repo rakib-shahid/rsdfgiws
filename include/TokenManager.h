@@ -20,7 +20,7 @@ bool isAccessTokenValid(const String &accessToken);
 bool isRefreshTokenValid();
 void saveToken(const String &token, const String fileName);
 String getToken(const String fileName);
-const char *exchangeCodeForToken(const String &code);
+String exchangeCodeForToken(const String &code);
 void getAuthorizationCode();
 
 #endif // TOKENMANAGER_H
