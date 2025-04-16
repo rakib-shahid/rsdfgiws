@@ -3,6 +3,7 @@
 #include "TokenManager.h"
 #include "SpotifyFunctions.h"
 #include "WifiSetup.h"
+#include "ImageFunctions.h"
 
 const int ledPin = 27;
 unsigned long lastSpotifyUpdate = 0;
@@ -81,15 +82,16 @@ void loop()
     {
         lastSpotifyData = spotifyData;
         // tft.fillScreen(TFT_BLACK);
-        tft.fillRect(0, 60, tft_width, 80, TFT_BLACK);
+        tft.fillRect(0, 60, tft_width, tft_height, TFT_BLACK);
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
         tft.setTextSize(2);
-        tft.setCursor(0, 60);
+        tft.setCursor(320, 0);
         // tft.println("Currently Playing:");
         tft.setTextSize(1);
         tft.println(spotifyData.name);
         tft.println(spotifyData.artist);
-        tft.println("Volume: " + String(spotifyData.volume));
+        tft.println(spotifyData.progress_ms / 1000);
+        drawJPGFromURL(tft, spotifyData.album_art_url.c_str(), 0, 90);
     }
 
     if (touch.touched())

@@ -42,6 +42,7 @@ bool getCurrentlyPlayingTrack(const String &accessToken)
         // Update global variables
         spotifyData.name = doc["item"]["name"].as<String>();
         // NEED TO GET ALL ARTISTS INSTEAD OF JUST ONE
+        // get list of artists by going through entire doc["item"]["artists"] array
         spotifyData.artist = doc["item"]["artists"][0]["name"].as<String>();
         spotifyData.is_playing = doc["is_playing"].as<bool>();
         spotifyData.progress_ms = doc["progress_ms"].as<int>();
