@@ -113,7 +113,7 @@ String getToken(const String fileName)
 
 String exchangeCodeForToken(const String &code)
 {
-
+    HTTPClient http;
     String authHeader = "Basic " + base64::encode(String(CLIENT_ID) + ":" + String(CLIENT_SECRET));
 
     http.begin("https://accounts.spotify.com/api/token");
@@ -202,6 +202,7 @@ void getAuthorizationCode()
 
 bool isAccessTokenValid(const String &accessToken)
 {
+    HTTPClient http;
     if (accessToken.length() == 0)
     {
         return false;
@@ -236,7 +237,7 @@ bool isAccessTokenValid(const String &accessToken)
 
 bool isRefreshTokenValid()
 {
-    // HTTPClient http;
+    HTTPClient http;
     http.begin("https://accounts.spotify.com/api/token");
     // headers
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");

@@ -58,6 +58,7 @@ void setup()
     startSpotifyTask();
 
     drawPlaybackControls(tft);
+    drawInitialProgressBar(tft);
 }
 
 // map coordinates since touches register weird
@@ -89,27 +90,42 @@ void loop()
 {
     if (xSemaphoreTake(spotifyMutex, 10 / portTICK_PERIOD_MS))
     {
-        if (spotifyData.is_playing && hasSongChanged(spotifyData, lastSpotifyData))
+        if (hasSongChanged(spotifyData, lastSpotifyData))
         {
-            lastSpotifyData = spotifyData;
-            // tft.fillScreen(TFT_BLACK);
-            // clear image and text
-            tft.fillRect(0, 0, tft.width(), 235, TFT_BLACK);
+            if (spotifyData.is_playing)
+            {
+                // tft.fillScreen(TFT_BLACK);
+                // clear image and text
+                tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
 
-            tft.setTextColor(TFT_WHITE, TFT_BLACK);
-            tft.setTextSize(2);
-            tft.setCursor(330, 0);
-            tft.setTextSize(1);
-            tft.println(spotifyData.name);
-            tft.setCursor(330, 10);
-            tft.println(spotifyData.artist);
-            tft.setCursor(330, 20);
-            tft.println(spotifyData.progress_ms / 1000);
+                tft.setTextColor(TFT_WHITE, TFT_BLACK);
+                tft.setTextSize(2);
+                tft.setCursor(330, 0);
+                tft.setTextSize(1);
+                tft.println(spotifyData.name);
+                tft.setCursor(330, 10);
+                tft.println(spotifyData.artist);
+                tft.setCursor(330, 20);
+                tft.println(spotifyData.progress_ms / 1000);
 
-            String rawUrl = "http://192.168.1.253:3000/raw?url=" + spotifyData.album_art_url;
-            drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
+                String rawUrl = "http://192.168.1.253:3000/raw?url=" + spotifyData.album_art_url;
+                drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
+            }
+            else
+            {
+                tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
+                tft.setTextColor(TFT_WHITE, TFT_BLACK);
+                tft.setTextSize(2);
+                tft.setCursor(330, 0);
+                tft.setTextSize(1);
+                tft.println("Paused");
+            }
         }
-
+        if (spotifyData.is_playing && hasProgressChanged(spotifyData, lastSpotifyData))
+        {
+            drawProgressBar(tft, spotifyData, lastSpotifyData);
+        }
+        lastSpotifyData = spotifyData;
         xSemaphoreGive(spotifyMutex);
     }
 

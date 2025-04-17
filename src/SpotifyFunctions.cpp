@@ -13,7 +13,7 @@
 // int durationMs;
 // int volume = 50;
 // String albumArtUrl;
-HTTPClient http;
+// HTTPClient http;
 
 // global struct for song data
 SpotifyData spotifyData = {"", "", false, 0, 0, 0, ""};
@@ -53,9 +53,10 @@ void startSpotifyTask()
 
 bool getCurrentlyPlayingTrack(const String &accessToken)
 {
+    HTTPClient http;
     http.begin("https://api.spotify.com/v1/me/player/currently-playing");
     http.addHeader("Authorization", "Bearer " + accessToken);
-    // http.addHeader("Connection", "keep-alive");
+    http.addHeader("Connection", "keep-alive");
     int httpResponseCode = http.GET();
     if (httpResponseCode == 200)
     {
@@ -84,6 +85,7 @@ bool getCurrentlyPlayingTrack(const String &accessToken)
     }
     else if (httpResponseCode == 204)
     {
+        http.end();
         return true;
     }
     else
@@ -97,6 +99,7 @@ bool getCurrentlyPlayingTrack(const String &accessToken)
 
 void refreshSpotifyTokens(const String &oldRefreshToken)
 {
+    HTTPClient http;
     http.begin("https://accounts.spotify.com/api/token");
     const char *client_id = CLIENT_ID;
     const char *client_secret = CLIENT_SECRET;
@@ -105,7 +108,8 @@ void refreshSpotifyTokens(const String &oldRefreshToken)
     body += "&client_id=" + String(client_id);
     body += "&client_secret=" + String(client_secret);
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    // http.addHeader("Connection", "keep-alive");
+    http.addHeader("Connection", "keep-alive");
+    http.setReuse(true);
     int httpResponseCode = http.POST(body);
     if (httpResponseCode == 200)
     {
@@ -128,6 +132,7 @@ void refreshSpotifyTokens(const String &oldRefreshToken)
 
 bool adjustVolume(const String &accessToken, int adjustment)
 {
+    HTTPClient http;
     int newVolume = spotifyData.volume + adjustment * 10;
     if (newVolume > 100)
         newVolume = 100;
@@ -145,6 +150,8 @@ bool adjustVolume(const String &accessToken, int adjustment)
     http.begin(url);
     http.addHeader("Authorization", "Bearer " + accessToken);
     http.addHeader("Content-Length", "0");
+    http.addHeader("Connection", "keep-alive");
+    http.setReuse(true);
 
     int httpResponseCode = http.PUT("");
     http.end();
@@ -163,10 +170,13 @@ bool adjustVolume(const String &accessToken, int adjustment)
 
 bool togglePlay(const String &accessToken)
 {
+    HTTPClient http;
     String endpoint = "https://api.spotify.com/v1/me/player/play";
     http.begin(endpoint);
     http.addHeader("Authorization", "Bearer " + accessToken);
     http.addHeader("Content-Length", "0");
+    http.addHeader("Connection", "keep-alive");
+    http.setReuse(true);
     int httpResponseCode = http.PUT("");
     if (httpResponseCode == 204 || httpResponseCode == 200)
     {
@@ -182,10 +192,13 @@ bool togglePlay(const String &accessToken)
 }
 bool togglePause(const String &accessToken)
 {
+    HTTPClient http;
     String endpoint = "https://api.spotify.com/v1/me/player/pause";
     http.begin(endpoint);
     http.addHeader("Authorization", "Bearer " + accessToken);
     http.addHeader("Content-Length", "0");
+    http.addHeader("Connection", "keep-alive");
+    http.setReuse(true);
     int httpResponseCode = http.PUT("");
     if (httpResponseCode == 204 || httpResponseCode == 200)
     {
@@ -206,6 +219,8 @@ bool skipToNextTrack(const String &accessToken)
     http.begin(endpoint);
     http.addHeader("Authorization", "Bearer " + accessToken);
     http.addHeader("Content-Length", "0");
+    http.addHeader("Connection", "keep-alive");
+    http.setReuse(true);
     int httpResponseCode = http.POST("");
     if (httpResponseCode == 204 || httpResponseCode == 200)
     {
@@ -226,6 +241,8 @@ bool skipToPreviousTrack(const String &accessToken)
     http.begin(endpoint);
     http.addHeader("Authorization", "Bearer " + accessToken);
     http.addHeader("Content-Length", "0");
+    http.addHeader("Connection", "keep-alive");
+    http.setReuse(true);
     int httpResponseCode = http.POST("");
     if (httpResponseCode == 204 || httpResponseCode == 200)
     {
@@ -243,4 +260,8 @@ bool skipToPreviousTrack(const String &accessToken)
 bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous)
 {
     return current.name != previous.name || current.artist != previous.artist || current.is_playing != previous.is_playing;
+}
+bool hasProgressChanged(const SpotifyData &current, const SpotifyData &previous)
+{
+    return current.progress_ms != previous.progress_ms;
 }

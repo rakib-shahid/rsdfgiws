@@ -1,5 +1,4 @@
 #include "Interface.h"
-#include "SpotifyFunctions.h"
 
 void drawPlaybackControls(TFT_eSPI &tft)
 {
@@ -8,6 +7,24 @@ void drawPlaybackControls(TFT_eSPI &tft)
     tft.drawRect(3, 248, 158, 68, TFT_WHITE);
     tft.drawRect(3 + 158, 248, 158, 68, TFT_WHITE);
     tft.drawRect(3 + 158 * 2, 248, 158, 68, TFT_WHITE);
+}
+
+void drawInitialProgressBar(TFT_eSPI &tft)
+{
+    tft.drawRect(3, 220, 474, 20, TFT_WHITE);
+}
+
+void drawProgressBar(TFT_eSPI &tft, SpotifyData currentData, SpotifyData lastData)
+{
+    if (spotifyData.progress_ms < lastSpotifyData.progress_ms)
+    {
+        // clear the progress bar
+        tft.fillRect(5, 222, 470, 16, TFT_BLACK);
+    }
+
+    // calculate the progress
+    int progress = (currentData.progress_ms * 470) / currentData.total_ms;
+    tft.fillRect(5, 222, progress, 16, TFT_WHITE);
 }
 
 void handlePlaybackControls(int x, int y)
@@ -22,7 +39,14 @@ void handlePlaybackControls(int x, int y)
     {
         // play/pause button
         Serial.println("Play/Pause button pressed");
-        togglePlay(accessToken);
+        if (spotifyData.is_playing)
+        {
+            togglePause(accessToken);
+        }
+        else
+        {
+            togglePlay(accessToken);
+        }
     }
     else if (x >= 319 && x <= 477 && y >= 248 && y <= 316)
     {

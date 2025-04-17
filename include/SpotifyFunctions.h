@@ -23,7 +23,7 @@ struct SpotifyData
 };
 extern struct SpotifyData spotifyData;
 extern struct SpotifyData lastSpotifyData;
-extern HTTPClient http;
+// extern HTTPClient http;
 
 bool getCurrentlyPlayingTrack(const String &accessToken);
 void refreshSpotifyTokens(const String &refreshToken);
@@ -33,6 +33,7 @@ bool togglePause(const String &accessToken);
 bool skipToNextTrack(const String &accessToken);
 bool skipToPreviousTrack(const String &accessToken);
 bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous);
+bool hasProgressChanged(const SpotifyData &current, const SpotifyData &previous);
 
 #include <Arduino.h>
 
