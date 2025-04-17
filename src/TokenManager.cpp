@@ -159,7 +159,7 @@ void getAuthorizationCode()
     bool loggedIn = false;
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-    String scopes = "user-read-playback-state%20user-modify-playback-state";
+    String scopes = "user-read-playback-state%20user-modify-playback-state%20uuser-read-currently-playing";
     String html = "<html><body><h1>Login to Spotify</h1>";
     html += "<a href=\"https://accounts.spotify.com/authorize?client_id=" + String(CLIENT_ID) + "&response_type=code&redirect_uri=" + String(REDIRECT_URI) + "&scope=" + scopes + "\">Login</a>";
     html += "</body></html>";

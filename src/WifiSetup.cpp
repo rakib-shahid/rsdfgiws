@@ -9,23 +9,27 @@ bool setupWifi(TFT_eSPI &tft)
 {
     AsyncWiFiManager wifiManager(&server, &dns);
 
-    wifiManager.autoConnect("rsdfgiws");
+    wifiManager.setConnectTimeout(20);
+    wifiManager.setConfigPortalTimeout(30);
+
+    tft.println("Starting WiFi...");
+
+    bool connected = wifiManager.autoConnect("rsdfgiws");
+
+    if (!connected)
+    {
+        tft.println("WiFi failed. Restarting...");
+        Serial.println("WiFi failed. Restarting...");
+        delay(3000);
+        ESP.restart();
+    }
 
     tft.println(WiFi.localIP());
     Serial.println(WiFi.localIP());
 
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        tft.println("WiFi connected");
-        Serial.println("WiFi connected");
-        return true;
-    }
-    else
-    {
-        tft.println("WiFi not connected");
-        Serial.println("WiFi not connected");
-        return false;
-    }
+    tft.println("WiFi connected");
+    Serial.println("WiFi connected");
+    return true;
 }
 
 bool pingTest(bool connected)

@@ -1,87 +1,142 @@
-#include "ImageFunctions.h"
-#include <TJpg_Decoder.h>
-#include <WiFiClient.h>
 #include <HTTPClient.h>
 #include <TFT_eSPI.h>
-#include "SpotifyFunctions.h"
+#include "support_functions.h"
+#include "pngle.h"
 
-static TFT_eSPI *tftPtr = nullptr;
-
-static bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+void drawPNGFromURL(TFT_eSPI &tft, const char *url, int16_t x, int16_t y)
 {
-    if (!tftPtr)
-        return false;
-    if (y >= tftPtr->height())
-        return false;
-    tftPtr->pushImage(x, y, w, h, bitmap);
-    return true;
-}
-
-bool drawJPGFromURL(TFT_eSPI &tft, const char *url, int16_t x, int16_t y)
-{
-    Serial.printf("[JPEG] Starting download: %s\n", url);
+    setPngPosition(x, y); // sets draw offset for rendering
+    // Serial.printf("[PNG] Starting download: %s\n", url);
     unsigned long start = millis();
 
-    // http.setReuse(true);
-    // WiFiClientSecure *client = new WiFiClientSecure;
-    // client->setInsecure();
-
-    // HTTPClient http;
-    // http.begin(*client, url);
+    HTTPClient http;
     http.begin(url);
 
+    int httpCode = http.GET();
+    if (httpCode != HTTP_CODE_OK)
+    {
+        // Serial.printf("[PNG] HTTP GET failed: %d\n", httpCode);
+        http.end();
+        return;
+    }
+
+    // unsigned long afterGet = millis();
+    // Serial.printf("[PNG] HTTP GET success. Time: %lu ms\n", afterGet - start);
+
+    int total = http.getSize();
+    WiFiClient *stream = http.getStreamPtr();
+    pngle_t *pngle = pngle_new();
+    pngle_set_draw_callback(pngle, pngle_on_draw);
+
+    uint8_t buf[1024];
+    int remain = 0;
+    int len;
+    uint32_t timeout = 0;
+
+    // unsigned long decodeStart = millis();
+
+    while (http.connected() && (total > 0 || total == -1))
+    {
+        size_t size = stream->available();
+        if (timeout > 2000)
+            break;
+        if (!size)
+        {
+            delay(2);
+            timeout++;
+            continue;
+        }
+
+        size = std::min(size, sizeof(buf) - remain);
+        if ((len = stream->readBytes(buf + remain, size)) > 0)
+        {
+            int fed = pngle_feed(pngle, buf, remain + len);
+            if (fed < 0)
+            {
+                Serial.printf("[PNG] ERROR: %s\n", pngle_error(pngle));
+                break;
+            }
+            remain = remain + len - fed;
+            if (remain > 0)
+                memmove(buf, buf + fed, remain);
+            total -= len;
+        }
+    }
+
+    // unsigned long decodeEnd = millis();
+    // Serial.printf("[PNG] PNG decode and draw complete. Time: %lu ms\n", decodeEnd - decodeStart);
+
+    if (pc)
+    {
+        tft.pushImage(png_dx + sx, png_dy + sy, pc, 1, lbuf);
+        pc = 0;
+    }
+
+    pngle_destroy(pngle);
+    http.end();
+
+    Serial.printf("[PNG] Total time: %lu ms\n", millis() - start);
+}
+
+bool drawRawImageFromURL(TFT_eSPI &tft, const char *url, int16_t x, int16_t y)
+{
+    HTTPClient http;
+    http.begin(url);
     int httpCode = http.GET();
 
     if (httpCode != HTTP_CODE_OK)
     {
-        Serial.printf("[JPEG] HTTP GET failed: %d\n", httpCode);
+        Serial.printf("[RAW] HTTP GET failed: %d\n", httpCode);
+        http.end();
         return false;
     }
-
-    unsigned long afterGet = millis();
-    Serial.printf("[JPEG] HTTP GET success. Time: %lu ms\n", afterGet - start);
 
     WiFiClient *stream = http.getStreamPtr();
-    int contentLength = http.getSize();
-
-    Serial.printf("[JPEG] Content length: %d bytes\n", contentLength);
-
-    uint8_t *jpegData = (uint8_t *)malloc(contentLength);
-    if (!jpegData)
+    int len = http.getSize();
+    if (len <= 4)
     {
-        Serial.println("[JPEG] Failed to allocate memory for JPEG data");
+        Serial.println("[RAW] Invalid image size");
+        http.end();
         return false;
     }
-    Serial.printf("[JPEG] Memory allocation done. Time: %lu ms\n", millis() - afterGet);
 
-    unsigned long readStart = millis();
-    int bytesRead = stream->readBytes(jpegData, contentLength);
-    unsigned long readEnd = millis();
-
-    if (bytesRead != contentLength)
+    // get dimensions from 4B header
+    uint8_t header[4];
+    if (stream->readBytes(header, 4) != 4)
     {
-        Serial.printf("[JPEG] Incomplete read: got %d of %d bytes\n", bytesRead, contentLength);
-        free(jpegData);
+        Serial.println("[RAW] Failed to read header");
+        http.end();
         return false;
     }
-    Serial.printf("[JPEG] Data read done. Time: %lu ms\n", readEnd - readStart);
 
-    tftPtr = &tft;
-    TJpgDec.setCallback(tft_output);
-    TJpgDec.setJpgScale(1);
-    TJpgDec.setSwapBytes(true);
+    int width = (header[0] << 8) | header[1];
+    int height = (header[2] << 8) | header[3];
 
-    Serial.println("[JPEG] Starting decode/draw...");
-    unsigned long decodeStart = millis();
-    JRESULT result = TJpgDec.drawJpg(x, y, jpegData, contentLength);
-    unsigned long decodeEnd = millis();
+    int pixels = width * height;
+    int dataLen = pixels * 2;
 
-    Serial.printf("[JPEG] Decode result: %d, Time: %lu ms\n", result, decodeEnd - decodeStart);
+    uint16_t *imageBuf = (uint16_t *)malloc(dataLen);
+    if (!imageBuf)
+    {
+        Serial.println("[RAW] Memory allocation failed");
+        http.end();
+        free(imageBuf);
+        return false;
+    }
 
-    free(jpegData);
-    Serial.printf("[JPEG] Total time: %lu ms\n", millis() - start);
+    int bytesRead = stream->readBytes((uint8_t *)imageBuf, dataLen);
+    if (bytesRead != dataLen)
+    {
+        Serial.printf("[RAW] Incomplete read: got %d / %d\n", bytesRead, dataLen);
+        free(imageBuf);
+        http.end();
+        return false;
+    }
 
-    tftPtr = nullptr;
+    tft.pushImage(x, y, width, height, imageBuf);
+    free(imageBuf);
+    http.end();
 
-    return (result == JDR_OK);
+    Serial.printf("[RAW] Drew image %dx%d at (%d, %d)\n", width, height, x, y);
+    return true;
 }

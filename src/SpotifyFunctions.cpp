@@ -1,6 +1,5 @@
 #include "SpotifyFunctions.h"
 #include "TokenManager.h"
-#include "TFTSetup.h"
 #include "Secrets.h"
 
 #include <HTTPClient.h>
@@ -19,6 +18,38 @@ HTTPClient http;
 // global struct for song data
 SpotifyData spotifyData = {"", "", false, 0, 0, 0, ""};
 SpotifyData lastSpotifyData = {"", "", false, 0, 0, 0, ""};
+SemaphoreHandle_t spotifyMutex;
+
+void spotifyTask(void *parameter)
+{
+    while (true)
+    {
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            if (xSemaphoreTake(spotifyMutex, 1000 / portTICK_PERIOD_MS))
+            {
+                getCurrentlyPlayingTrack(accessToken);
+                xSemaphoreGive(spotifyMutex);
+            }
+        }
+
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+}
+
+void startSpotifyTask()
+{
+    spotifyMutex = xSemaphoreCreateMutex();
+    xTaskCreatePinnedToCore(
+        spotifyTask,    // function
+        "Spotify Task", // name
+        8192,           // stack size
+        NULL,           // param
+        1,              // priority
+        NULL,           // handle
+        1               // core ID (run on core 1)
+    );
+}
 
 bool getCurrentlyPlayingTrack(const String &accessToken)
 {
@@ -47,8 +78,12 @@ bool getCurrentlyPlayingTrack(const String &accessToken)
         spotifyData.is_playing = doc["is_playing"].as<bool>();
         spotifyData.progress_ms = doc["progress_ms"].as<int>();
         spotifyData.total_ms = doc["item"]["duration_ms"].as<int>();
-        spotifyData.album_art_url = doc["item"]["album"]["images"][2]["url"].as<String>();
+        spotifyData.album_art_url = doc["item"]["album"]["images"][1]["url"].as<String>();
         http.end();
+        return true;
+    }
+    else if (httpResponseCode == 204)
+    {
         return true;
     }
     else

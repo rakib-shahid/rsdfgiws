@@ -11,7 +11,6 @@
 #include "TFTSetup.h"
 #include <HTTPClient.h>
 
-// global struct
 struct SpotifyData
 {
     String name;
@@ -34,5 +33,10 @@ bool togglePause(const String &accessToken);
 bool skipToNextTrack(const String &accessToken);
 bool skipToPreviousTrack(const String &accessToken);
 bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous);
+
+#include <Arduino.h>
+
+extern SemaphoreHandle_t spotifyMutex;
+void startSpotifyTask();
 
 #endif // SPOTIFY_FUNCTIONS_H
