@@ -1,5 +1,4 @@
-#ifndef WIFI_SETUP_H
-#define WIFI_SETUP_H
+#pragma once
 
 #include <WiFi.h>
 // #include <WiFiManager.h>
@@ -12,5 +11,3 @@ extern DNSServer dns;
 
 bool setupWifi(TFT_eSPI &tft);
 bool pingTest(bool connected);
-
-#endif // WIFI_SETUP_H

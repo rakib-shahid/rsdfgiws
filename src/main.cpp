@@ -148,7 +148,7 @@ void loop()
                 {
                     activeButton = region;
                     digitalWrite(ledPin, HIGH);
-                    handlePlaybackControls(x, y);
+                    handlePlaybackControls(region, x, y);
                 }
             }
             else

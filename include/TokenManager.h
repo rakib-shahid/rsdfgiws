@@ -1,5 +1,4 @@
-#ifndef TOKENMANAGER_H
-#define TOKENMANAGER_H
+#pragma once
 
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
@@ -22,5 +21,3 @@ void saveToken(const String &token, const String fileName);
 String getToken(const String fileName);
 String exchangeCodeForToken(const String &code);
 void getAuthorizationCode();
-
-#endif // TOKENMANAGER_H

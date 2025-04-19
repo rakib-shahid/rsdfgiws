@@ -1,5 +1,5 @@
 #include <HTTPClient.h>
-#include <TFT_eSPI.h>
+#include "TFTSetup.h"
 #include "support_functions.h"
 #include "pngle.h"
 
@@ -119,6 +119,9 @@ bool drawRawImageFromURL(TFT_eSPI &tft, const char *url, int16_t x, int16_t y)
     if (!imageBuf)
     {
         Serial.println("[RAW] Memory allocation failed");
+        Serial.printf("[DEBUG] Requested: %u bytes | Free heap: %u bytes\n", dataLen, ESP.getFreeHeap());
+        Serial.printf("Largest allocatable block: %u bytes\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+
         http.end();
         free(imageBuf);
         return false;

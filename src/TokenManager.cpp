@@ -7,7 +7,6 @@
 #include <Base64.h>
 #include <ESPmDNS.h>
 #include <ArduinoJson.h>
-#include <HTTPClient.h>
 #include "SpotifyFunctions.h"
 #include "WifiSetup.h"
 

@@ -1,6 +1,5 @@
 // TFTSetup.h
-#ifndef TFTSETUP_H
-#define TFTSETUP_H
+#pragma once
 
 #include <TFT_eSPI.h>
 #include <Wire.h>
@@ -15,5 +14,3 @@ extern const int tft_height;
 // Function to initialize the TFT display
 void initializeTFT();
 void initializeTouch();
-
-#endif // TFTSETUP_H

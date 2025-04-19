@@ -1,11 +1,4 @@
-#ifndef SPOTIFY_FUNCTIONS_H
-#define SPOTIFY_FUNCTIONS_H
-
-// #include <WiFi.h>
-// #include <WebServer.h>
-// #include <ESPmDNS.h>
-// #include <SpotifyArduino.h>
-// #include <SpotifyArduinoCert.h>
+#pragma once
 
 #include "TokenManager.h"
 #include "TFTSetup.h"
@@ -23,21 +16,25 @@ struct SpotifyData
 };
 extern struct SpotifyData spotifyData;
 extern struct SpotifyData lastSpotifyData;
-// extern HTTPClient http;
 
+// token hoopla
 bool getCurrentlyPlayingTrack(const String &accessToken);
 void refreshSpotifyTokens(const String &refreshToken);
+
+// playback functions
 bool adjustVolume(const String &accessToken, int adjustment);
-bool togglePlay(const String &accessToken);
-bool togglePause(const String &accessToken);
-bool skipToNextTrack(const String &accessToken);
-bool skipToPreviousTrack(const String &accessToken);
+bool togglePlay(const String &accessToken, HTTPClient &http);
+bool togglePause(const String &accessToken, HTTPClient &http);
+bool skipToNextTrack(const String &accessToken, HTTPClient &http);
+bool skipToPreviousTrack(const String &accessToken, HTTPClient &http);
+bool seekTo(int x, HTTPClient &http);
+
+// checking functions
 bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous);
 bool hasProgressChanged(const SpotifyData &current, const SpotifyData &previous);
 
+// for second core (to check current song in background)
 #include <Arduino.h>
 
 extern SemaphoreHandle_t spotifyMutex;
 void startSpotifyTask();
-
-#endif // SPOTIFY_FUNCTIONS_H

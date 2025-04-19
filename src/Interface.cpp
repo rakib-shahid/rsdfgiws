@@ -1,4 +1,7 @@
 #include "Interface.h"
+#include <HTTPClient.h>
+
+HTTPClient playbackHttpClient;
 
 void drawPlaybackControls(TFT_eSPI &tft)
 {
@@ -27,32 +30,39 @@ void drawProgressBar(TFT_eSPI &tft, SpotifyData currentData, SpotifyData lastDat
     tft.fillRect(5, 222, progress, 16, TFT_WHITE);
 }
 
-void handlePlaybackControls(int x, int y)
+void handlePlaybackControls(ButtonRegion region, int x, int y)
 {
-    if (x >= 3 && x <= 161 && y >= 248 && y <= 316)
+    switch (region)
     {
-        // previous button
+    // previous button
+    case PREV:
         Serial.println("Previous button pressed");
-        skipToPreviousTrack(accessToken);
-    }
-    else if (x >= 161 && x <= 319 && y >= 248 && y <= 316)
-    {
-        // play/pause button
+        skipToPreviousTrack(accessToken, playbackHttpClient);
+        break;
+    // play/pause button
+    case PLAY_PAUSE:
         Serial.println("Play/Pause button pressed");
         if (spotifyData.is_playing)
         {
-            togglePause(accessToken);
+            togglePause(accessToken, playbackHttpClient);
         }
         else
         {
-            togglePlay(accessToken);
+            togglePlay(accessToken, playbackHttpClient);
         }
-    }
-    else if (x >= 319 && x <= 477 && y >= 248 && y <= 316)
-    {
-        // next button
+        break;
+    // next button
+    case NEXT:
         Serial.println("Next button pressed");
-        skipToNextTrack(accessToken);
+        skipToNextTrack(accessToken, playbackHttpClient);
+        break;
+    // seek bar
+    case SEEK_BAR:
+        Serial.println("Seek bar touched");
+        seekTo(x, playbackHttpClient);
+
+    default:
+        break;
     }
 }
 
@@ -64,6 +74,8 @@ ButtonRegion getButtonRegion(int x, int y)
         return PLAY_PAUSE;
     else if (x >= 319 && x <= 477 && y >= 248 && y <= 316)
         return NEXT;
+    else if (x >= 0 && x <= 477 && y >= 220 && y <= 236)
+        return SEEK_BAR;
     else
         return NONE;
 }
