@@ -108,7 +108,7 @@ void loop()
                 tft.setCursor(330, 20);
                 tft.println(spotifyData.progress_ms / 1000);
 
-                String rawUrl = "http://192.168.1.253:3000/raw?url=" + spotifyData.album_art_url;
+                String rawUrl = "http://rsdfgiws.rakibshahid.com/raw?url=" + spotifyData.album_art_url;
                 drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
             }
             else
