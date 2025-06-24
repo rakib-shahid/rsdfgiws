@@ -1,0 +1,24 @@
+CompileFlags:
+  Add:
+    - -Iinclude
+    - -I.pio/libdeps/denky32/Adafruit BusIO
+    - -I.pio/libdeps/denky32/Adafruit FT6206 Library
+    - -I.pio/libdeps/denky32/Adafruit GFX Library
+    - -I.pio/libdeps/denky32/Adafruit ILI9341
+    - -I.pio/libdeps/denky32/Adafruit SH110X
+    - -I.pio/libdeps/denky32/Adafruit STMPE610
+    - -I.pio/libdeps/denky32/Adafruit TouchScreen
+    - -I.pio/libdeps/denky32/Adafruit TSC2007
+    - -I.pio/libdeps/denky32/ArduinoJson
+    - -I.pio/libdeps/denky32/AsyncTCP
+    - -I.pio/libdeps/denky32/AsyncTCP@src-7fb2940bccb78b8d2de6915ae328b7fc
+    - -I.pio/libdeps/denky32/base64
+    - -I.pio/libdeps/denky32/ESP Async WebServer
+    - -I.pio/libdeps/denky32/ESP32Ping
+    - -I.pio/libdeps/denky32/ESPAsyncWiFiManager
+    - -I.pio/libdeps/denky32/SpotifyArduino
+    - -I.pio/libdeps/denky32/TFT_eSPI
+    - -I.pio/libdeps/denky32/pngle
+    - -I.pio/build/denky32/framework-arduinoespressif32
+  Remove: [-fno-tree-switch-conversion]
+

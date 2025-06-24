@@ -23,7 +23,7 @@ void setPngPosition(int16_t x, int16_t y) {
 
 // Draw pixel - called by pngle
 void pngle_on_draw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w,
-                   uint32_t h, const uint8_t *rgba) {
+                   uint32_t h, uint8_t *rgba) {
   uint16_t color = (rgba[0] << 8 & 0xf800) | (rgba[1] << 3 & 0x07e0) |
                    (rgba[2] >> 3 & 0x001f);
 
