@@ -16,8 +16,8 @@
 // HTTPClient http;
 
 // global struct for song data
-SpotifyData spotifyData = {"", "", false, 0, 0, 0, ""};
-SpotifyData lastSpotifyData = {"", "", false, 0, 0, 0, ""};
+PlayerData playerData = {"", "", false, 0, 0, 0, ""};
+PlayerData lastPlayerData = {"", "", false, 0, 0, 0, ""};
 SemaphoreHandle_t spotifyMutex;
 HTTPClient playingTrackHttpClient;
 
@@ -74,14 +74,14 @@ bool getCurrentlyPlayingTrack(TokenInfo &tokenInfo) {
     }
 
     // Update global variables
-    spotifyData.name = doc["item"]["name"].as<String>();
+    playerData.name = doc["item"]["name"].as<String>();
     // NEED TO GET ALL ARTISTS INSTEAD OF JUST ONE
     // get list of artists by going through entire doc["item"]["artists"] array
-    spotifyData.artist = doc["item"]["artists"][0]["name"].as<String>();
-    spotifyData.is_playing = doc["is_playing"].as<bool>();
-    spotifyData.progress_ms = doc["progress_ms"].as<int>();
-    spotifyData.total_ms = doc["item"]["duration_ms"].as<int>();
-    spotifyData.album_art_url =
+    playerData.artist = doc["item"]["artists"][0]["name"].as<String>();
+    playerData.is_playing = doc["is_playing"].as<bool>();
+    playerData.progress_ms = doc["progress_ms"].as<int>();
+    playerData.total_ms = doc["item"]["duration_ms"].as<int>();
+    playerData.album_art_url =
         doc["item"]["album"]["images"][1]["url"].as<String>();
     // http.end();
 
@@ -156,17 +156,17 @@ void refreshSpotifyTokens(TokenInfo &tokenInfo) {
 
 bool adjustVolume(const String &accessToken, int adjustment) {
   HTTPClient http;
-  int newVolume = spotifyData.volume + adjustment * 10;
+  int newVolume = playerData.volume + adjustment * 10;
   if (newVolume > 100)
     newVolume = 100;
   if (newVolume < 0)
     newVolume = 0;
 
-  if (newVolume == spotifyData.volume) {
+  if (newVolume == playerData.volume) {
     return true;
   }
 
-  spotifyData.volume = newVolume;
+  playerData.volume = newVolume;
 
   String url = "https://api.spotify.com/v1/me/player/volume?volume_percent=" +
                String(newVolume);
@@ -311,7 +311,7 @@ bool seekTo(TokenInfo &tokenInfo, int x, HTTPClient &http) {
 #ifdef ENABLE_TIMING
   unsigned long start = millis();
 #endif
-  int newProgress = (x * spotifyData.total_ms) / 470;
+  int newProgress = (x * playerData.total_ms) / 470;
 
   String endpoint = "https://api.spotify.com/v1/me/player/seek?position_ms=" +
                     String(newProgress);
@@ -337,11 +337,10 @@ bool seekTo(TokenInfo &tokenInfo, int x, HTTPClient &http) {
   }
 }
 
-bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous) {
+bool hasSongChanged(const PlayerData &current, const PlayerData &previous) {
   return current.name != previous.name || current.artist != previous.artist ||
          current.is_playing != previous.is_playing;
 }
-bool hasProgressChanged(const SpotifyData &current,
-                        const SpotifyData &previous) {
+bool hasProgressChanged(const PlayerData &current, const PlayerData &previous) {
   return current.progress_ms != previous.progress_ms;
 }

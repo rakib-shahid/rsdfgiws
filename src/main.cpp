@@ -85,8 +85,8 @@ void mapTouchCoordinates(int &x, int &y) {
 
 void loop() {
   if (xSemaphoreTake(spotifyMutex, 10 / portTICK_PERIOD_MS)) {
-    if (hasSongChanged(spotifyData, lastSpotifyData)) {
-      if (spotifyData.is_playing) {
+    if (hasSongChanged(playerData, lastPlayerData)) {
+      if (playerData.is_playing) {
         // tft.fillScreen(TFT_BLACK);
         // clear image and text
         tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
@@ -95,14 +95,14 @@ void loop() {
         tft.setTextSize(2);
         tft.setCursor(330, 0);
         tft.setTextSize(1);
-        tft.println(spotifyData.name);
+        tft.println(playerData.name);
         tft.setCursor(330, 10);
-        tft.println(spotifyData.artist);
+        tft.println(playerData.artist);
         tft.setCursor(330, 20);
-        tft.println(spotifyData.progress_ms / 1000);
+        tft.println(playerData.progress_ms / 1000);
 
         String rawUrl = "http://rsdfgiws.rakibshahid.com/raw?url=" +
-                        spotifyData.album_art_url;
+                        playerData.album_art_url;
         drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
       } else {
         tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
@@ -113,11 +113,11 @@ void loop() {
         tft.println("Paused");
       }
     }
-    if (spotifyData.is_playing &&
-        hasProgressChanged(spotifyData, lastSpotifyData)) {
-      drawProgressBar(tft, spotifyData, lastSpotifyData);
+    if (playerData.is_playing &&
+        hasProgressChanged(playerData, lastPlayerData)) {
+      drawProgressBar(tft, playerData, lastPlayerData);
     }
-    lastSpotifyData = spotifyData;
+    lastPlayerData = playerData;
     xSemaphoreGive(spotifyMutex);
   }
 

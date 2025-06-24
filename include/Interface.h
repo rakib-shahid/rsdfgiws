@@ -6,8 +6,8 @@
 enum ButtonRegion { NONE, PREV, PLAY_PAUSE, SEEK_BAR, NEXT };
 void drawPlaybackControls(TFT_eSPI &tft);
 void drawInitialProgressBar(TFT_eSPI &tft);
-void drawProgressBar(TFT_eSPI &tft, SpotifyData currentData,
-                     SpotifyData lastData);
+void drawProgressBar(TFT_eSPI &tft, PlayerData currentData,
+                     PlayerData lastData);
 void handlePlaybackControls(TokenInfo &tokenInfo, ButtonRegion button, int x,
                             int y);
 ButtonRegion getButtonRegion(int x, int y);

@@ -15,9 +15,9 @@ void drawInitialProgressBar(TFT_eSPI &tft) {
   tft.drawRect(3, 220, 474, 20, TFT_WHITE);
 }
 
-void drawProgressBar(TFT_eSPI &tft, SpotifyData currentData,
-                     SpotifyData lastData) {
-  if (spotifyData.progress_ms < lastSpotifyData.progress_ms) {
+void drawProgressBar(TFT_eSPI &tft, PlayerData currentData,
+                     PlayerData lastData) {
+  if (playerData.progress_ms < lastPlayerData.progress_ms) {
     // clear the progress bar
     tft.fillRect(5, 222, 470, 16, TFT_BLACK);
   }
@@ -38,7 +38,7 @@ void handlePlaybackControls(TokenInfo &tokenInfo, ButtonRegion region, int x,
   // play/pause button
   case PLAY_PAUSE:
     Serial.println("Play/Pause button pressed");
-    if (spotifyData.is_playing) {
+    if (playerData.is_playing) {
       togglePause(tokenInfo.accessToken, playbackHttpClient);
     } else {
       togglePlay(tokenInfo.accessToken, playbackHttpClient);

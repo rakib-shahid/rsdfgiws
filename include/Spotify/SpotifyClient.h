@@ -1,20 +1,12 @@
 #pragma once
 
+#include "Spotify/SpotifyTypes.h"
 #include "Spotify/TokenManager.h"
 #include "TFTSetup.h"
 #include <HTTPClient.h>
 
-struct SpotifyData {
-  String name;
-  String artist;
-  bool is_playing;
-  int progress_ms;
-  int total_ms;
-  int volume;
-  String album_art_url;
-};
-extern struct SpotifyData spotifyData;
-extern struct SpotifyData lastSpotifyData;
+extern struct PlayerData playerData;
+extern struct PlayerData lastPlayerData;
 
 // token hoopla
 bool getCurrentlyPlayingTrack(TokenInfo &tokenInfo);
@@ -29,9 +21,8 @@ bool skipToPreviousTrack(const String &accessToken, HTTPClient &http);
 bool seekTo(TokenInfo &tokenInfo, int x, HTTPClient &http);
 
 // checking functions
-bool hasSongChanged(const SpotifyData &current, const SpotifyData &previous);
-bool hasProgressChanged(const SpotifyData &current,
-                        const SpotifyData &previous);
+bool hasSongChanged(const PlayerData &current, const PlayerData &previous);
+bool hasProgressChanged(const PlayerData &current, const PlayerData &previous);
 
 // for second core (to check current song in background)
 #include <Arduino.h>
