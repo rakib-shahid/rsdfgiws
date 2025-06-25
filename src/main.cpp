@@ -1,3 +1,4 @@
+#include "Core/AppContext.h"
 #include "ImageFunctions.h"
 #include "Interface.h"
 #include "Secrets.h"
@@ -13,6 +14,7 @@ const unsigned long spotifyInterval = 200;
 ButtonRegion activeButton = NONE;
 bool wasTouched = false;
 TokenInfo tokenInfo;
+AppContext appContext;
 
 void setup() {
   Serial.begin(115200);
@@ -33,18 +35,19 @@ void setup() {
   tokenInfo.authTokenFileName = "/authtoken.txt";
   tokenInfo.accessTokenFileName = "/accesstoken.txt";
   tokenInfo.refreshTokenFileName = "/refreshtoken.txt";
-  readAccessToken(tokenInfo);
+  appContext.tokens = tokenInfo;
+  readAccessToken(appContext.tokens);
 
   // check token validity:
-  if (!isAccessTokenValid(tokenInfo)) {
+  if (!isAccessTokenValid(appContext.tokens)) {
     Serial.println("Access token is invalid. Refreshing...");
-    if (!isRefreshTokenValid(tokenInfo)) {
+    if (!isRefreshTokenValid(appContext.tokens)) {
       Serial.println("Refresh token is invalid. Getting new auth code...");
-      getAuthorizationCode(tokenInfo);
+      getAuthorizationCode(appContext.tokens);
     } else {
       Serial.println(
           "Refresh token is valid. Exchanging for new access token...");
-      refreshSpotifyTokens(tokenInfo);
+      refreshSpotifyTokens(appContext.tokens);
     }
   } else {
     Serial.println("Access token is valid.");
@@ -54,7 +57,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
-  startSpotifyTask(tokenInfo);
+  startSpotifyTask(appContext.tokens);
 
   drawPlaybackControls(tft);
   drawInitialProgressBar(tft);
@@ -136,7 +139,7 @@ void loop() {
         if (region != NONE) {
           activeButton = region;
           digitalWrite(ledPin, HIGH);
-          handlePlaybackControls(tokenInfo, region, x, y);
+          handlePlaybackControls(appContext.tokens, region, x, y);
         }
       } else {
         if (region == NONE) {

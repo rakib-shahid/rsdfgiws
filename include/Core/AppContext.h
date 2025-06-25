@@ -6,6 +6,6 @@
 
 struct AppContext {
   TFT_eSPI *tft;
-  TokenInfo tokenInfo;
+  TokenInfo tokens;
   PlayerData playerData;
 };
