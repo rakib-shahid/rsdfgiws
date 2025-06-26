@@ -2,3 +2,4 @@
 .vscode
 include/Secrets.h
 .cache
+compile_commands.json

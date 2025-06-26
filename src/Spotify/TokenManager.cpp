@@ -144,10 +144,10 @@ void getAuthorizationCode(TokenInfo &tokenInfo) {
                     "20user-read-currently-playing";
     String html = "<html><body><h1>rsdfgiws</h1><h3>Log in to spotify using "
                   "the link below!</h3>";
-    String encodedRedirectURI = "http%3A%2F%2Fesp32.local%2Fcallback";
+    // String encodedRedirectURI = "http%3A%2F%2Fesp32.local%2Fcallback";
     html += "<a href=\"https://accounts.spotify.com/authorize?client_id=" +
             String(CLIENT_ID) +
-            "&response_type=code&redirect_uri=" + String(encodedRedirectURI) +
+            "&response_type=code&redirect_uri=" + String(REDIRECT_URI) +
             "&scope=" + scopes + "\">Login Here</a>";
     html += "</body></html>";
     request->send(200, "text/html", html);
@@ -184,6 +184,7 @@ void getAuthorizationCode(TokenInfo &tokenInfo) {
   tft.setCursor(0, 30);
   tft.print("Go to ");
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.print("http://");
   tft.print(WiFi.localIP().toString());
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.print("\non another device\nto login to Spotify");

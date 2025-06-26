@@ -9,10 +9,10 @@ bool setupWifi(TFT_eSPI &tft, AppContext appContext) {
   AsyncWiFiManager wifiManager(appContext.tokens.webserver, &dns);
 
   wifiManager.setConnectTimeout(20);
-  wifiManager.setConfigPortalTimeout(30);
+  wifiManager.setConfigPortalTimeout(0);
 
   tft.println("Starting WiFi...");
-
+  tft.println("Connect to rsdfgiws WiFi network to configure...");
   bool connected = wifiManager.autoConnect("rsdfgiws");
 
   if (!connected) {

@@ -158,7 +158,7 @@ void loop() {
         }
       } else {
         if (region == NONE) {
-          Serial.printf("Touch at: %d, %d\n", x, y);
+          // Serial.printf("Touch at: %d, %d\n", x, y);
           // tft.fillCircle(x, y, 2, TFT_WHITE);
           digitalWrite(ledPin, HIGH);
         }
