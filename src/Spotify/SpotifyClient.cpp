@@ -56,6 +56,8 @@ bool getCurrentlyPlayingTrack(TokenInfo &tokenInfo) {
       "https://api.spotify.com/v1/me/player/currently-playing");
   playingTrackHttpClient.addHeader("Authorization",
                                    "Bearer " + tokenInfo.accessToken);
+  // Serial.println("[DEBUG SPOTCLIENT ACCESSTOKEN]");
+  // Serial.println(tokenInfo.accessToken);
   playingTrackHttpClient.addHeader("Connection", "keep-alive");
   int httpResponseCode = playingTrackHttpClient.GET();
   if (httpResponseCode == 200) {
@@ -143,7 +145,7 @@ void refreshSpotifyTokens(TokenInfo &tokenInfo) {
     deserializeJson(doc, response);
     String newAccessToken = doc["access_token"].as<String>();
     tokenInfo.accessToken = newAccessToken;
-    saveToken(newAccessToken, tokenInfo.accessTokenFileName);
+    // saveToken(newAccessToken, tokenInfo.accessTokenFileName);
   } else {
     String response = http.getString();
     Serial.println("Failed to refresh tokens. HTTP response code: " +

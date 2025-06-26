@@ -107,68 +107,79 @@ String exchangeCodeForToken(TokenInfo &tokenInfo, const String &code) {
 
   int httpResponseCode = http.POST(postData);
 
-  if (httpResponseCode != 400) {
+  if (httpResponseCode > 0) {
     String response = http.getString();
-    // Serial.println("Response Code: " + String(httpResponseCode));
-    // Serial.println("Response: " + response);
-    http.end();
-    saveToken(response, tokenInfo.tokenFileName);
-    return response;
+    Serial.printf("[DEBUG] Spotify token exchange HTTP %d\n", httpResponseCode);
+    Serial.println("[DEBUG] Token exchange response:");
+    Serial.println(response);
+
+    if (httpResponseCode == 200) {
+      saveToken(response, tokenInfo.tokenFileName);
+      http.end();
+      return response;
+    } else {
+      Serial.println("[ERROR] Token exchange failed, not saving.");
+    }
   } else {
-    // Serial.println("Error Response Code: " + String(httpResponseCode));
-    // String response = http.getString();
-    // Serial.println("Response: " + response);
-    http.end();
-    String empty = "";
-    return empty;
+    Serial.printf(
+        "[ERROR] Failed to connect to Spotify token endpoint. Code: %d\n",
+        httpResponseCode);
   }
+  http.end();
+  return "";
 }
 
 void getAuthorizationCode(TokenInfo &tokenInfo) {
-  if (!MDNS.begin("esp32-callback-url")) {
+  if (!MDNS.begin("esp32")) {
     Serial.println("Error setting up MDNS responder!");
     while (1) {
       delay(1000);
     }
   }
-  Serial.println("mDNS responder started");
-  bool loggedIn = false;
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+  Serial.println("[mDNS] esp32.local is now active");
+
+  tokenInfo.webserver->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("[HTTP GET /] Serving login page...");
     String scopes = "user-read-playback-state%20user-modify-playback-state%"
-                    "20uuser-read-currently-playing";
-    String html = "<html><body><h1>Login to Spotify</h1>";
+                    "20user-read-currently-playing";
+    String html = "<html><body><h1>rsdfgiws</h1><h3>Log in to spotify using "
+                  "the link below!</h3>";
+    String encodedRedirectURI = "http%3A%2F%2Fesp32.local%2Fcallback";
     html += "<a href=\"https://accounts.spotify.com/authorize?client_id=" +
             String(CLIENT_ID) +
-            "&response_type=code&redirect_uri=" + String(REDIRECT_URI) +
-            "&scope=" + scopes + "\">Login</a>";
+            "&response_type=code&redirect_uri=" + String(encodedRedirectURI) +
+            "&scope=" + scopes + "\">Login Here</a>";
     html += "</body></html>";
-    // Serial.println("html page: " + html);
     request->send(200, "text/html", html);
   });
 
-  server.on(
-      "/callback", HTTP_GET,
-      [&loggedIn, &tokenInfo](AsyncWebServerRequest *request) {
+  tokenInfo.webserver->on(
+      "/callback", HTTP_GET, [&tokenInfo](AsyncWebServerRequest *request) {
+        Serial.println("[HTTP GET /callback] Callback triggered");
         if (request->hasParam("code")) {
           String code = request->getParam("code")->value();
-          // Serial.println("Authorization Code: " + code);
-          // saveToken(code);
+          Serial.println("[Callback] Authorization code received:");
+          Serial.println(code);
+
           saveToken(code, tokenInfo.authTokenFileName);
-          loggedIn = true;
+          tokenInfo.loggedIn = true;
+
           request->send(200, "text/plain",
                         "Login successful! You can now close this window.");
+
           tft.fillScreen(TFT_BLACK);
           tft.setTextColor(TFT_GREEN, TFT_BLACK);
           tft.setCursor(0, 10);
           tft.println("Login successful!\nToken saved.");
-          // return;
         } else {
+          Serial.println("[Callback] Authorization code NOT found!");
           request->send(400, "text/plain", "Authorization code not found!");
         }
       });
 
-  // Start the server
-  server.begin();
+  tokenInfo.webserver->begin();
+  Serial.println("[Webserver] Started and awaiting login");
+
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(0, 30);
   tft.print("Go to ");
@@ -176,13 +187,21 @@ void getAuthorizationCode(TokenInfo &tokenInfo) {
   tft.print(WiFi.localIP().toString());
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.print("\non another device\nto login to Spotify");
-  while (!loggedIn) {
+  Serial.println("[Login] Waiting for login");
+  while (!tokenInfo.loggedIn) {
     delay(100);
   }
+
+  Serial.println("[Login] Completed, token saved.");
+
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 }
 
 bool isAccessTokenValid(TokenInfo &tokenInfo) {
+  Serial.print("[DEBUG] Access token string: [");
+  Serial.print(tokenInfo.accessToken);
+  Serial.println("]");
+
   HTTPClient http;
   if (tokenInfo.accessToken.length() == 0) {
     return false;

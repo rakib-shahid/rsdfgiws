@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 
-extern AsyncWebServer server;
 extern String authCode;
 
 struct TokenInfo {
@@ -11,12 +10,13 @@ struct TokenInfo {
   const char *tokenFileName;
   const char *accessTokenFileName;
   const char *refreshTokenFileName;
-  AsyncWebServer server;
+  bool loggedIn;
+  AsyncWebServer *webserver;
   String authCode;
   String accessToken;
   String refreshToken;
 
-  TokenInfo() : server(80) {}
+  TokenInfo() : webserver(new AsyncWebServer(80)) {}
 };
 
 void readAccessToken(TokenInfo &tokenInfo);

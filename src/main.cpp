@@ -21,8 +21,16 @@ void setup() {
   delay(1000);
   initializeTFT();
   initializeTouch();
+
+  tokenInfo.tokenFileName = "/token.txt";
+  tokenInfo.authTokenFileName = "/authtoken.txt";
+  tokenInfo.accessTokenFileName = "/accesstoken.txt";
+  tokenInfo.refreshTokenFileName = "/refreshtoken.txt";
+  tokenInfo.loggedIn = false;
+  appContext.tokens = tokenInfo;
+
   tft.println("Initializing wifi");
-  setupWifi(tft);
+  setupWifi(tft, appContext);
 
   tft.println("Wifi initialized");
 
@@ -31,19 +39,20 @@ void setup() {
   initializeFileSystem();
   tft.println("SPIFFS initialized");
   tft.println("Initializing Spotify tokens");
-  tokenInfo.tokenFileName = "/token.txt";
-  tokenInfo.authTokenFileName = "/authtoken.txt";
-  tokenInfo.accessTokenFileName = "/accesstoken.txt";
-  tokenInfo.refreshTokenFileName = "/refreshtoken.txt";
-  appContext.tokens = tokenInfo;
   readAccessToken(appContext.tokens);
-
+  String authCode = "";
   // check token validity:
   if (!isAccessTokenValid(appContext.tokens)) {
     Serial.println("Access token is invalid. Refreshing...");
     if (!isRefreshTokenValid(appContext.tokens)) {
-      Serial.println("Refresh token is invalid. Getting new auth code...");
+      Serial.println("Refresh token is invalid. Checking auth code...");
+      // if (!validateAuthCode(appContext.tokens)) {
+      // Serial.println("Auth code invalid, getting a new auth code...");
       getAuthorizationCode(appContext.tokens);
+      // }
+      authCode = getToken(appContext.tokens.authTokenFileName);
+      exchangeCodeForToken(appContext.tokens, authCode);
+      readAccessToken(appContext.tokens);
     } else {
       Serial.println(
           "Refresh token is valid. Exchanging for new access token...");
@@ -53,7 +62,13 @@ void setup() {
     Serial.println("Access token is valid.");
   }
   tft.println("Spotify tokens initialized");
-
+  SPIFFS.end();
+  // String reft = getToken(appContext.tokens.refreshTokenFileName);
+  // String accesst = getToken(appContext.tokens.accessTokenFileName);
+  // Serial.println("[TOKENS] ");
+  // Serial.println(reft);
+  // Serial.println(accesst);
+  // Serial.println("[END OF TOKENS]");
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
