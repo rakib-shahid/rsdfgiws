@@ -1,10 +1,12 @@
 #include "Core/AppContext.h"
+#include "Core/ScreenManager.h"
 #include "ImageFunctions.h"
 #include "Interface.h"
 #include "Secrets.h"
 #include "Spotify/SpotifyClient.h"
 #include "Spotify/TokenManager.h"
 #include "TFTSetup.h"
+#include "UI/NowPlayingScreen.h"
 #include "WifiSetup.h"
 
 const int ledPin = 27;
@@ -16,12 +18,19 @@ bool wasTouched = false;
 TokenInfo tokenInfo;
 AppContext appContext;
 
+ScreenManager screenManager;
+NowPlayingScreen nowPlayingScreen;
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
   initializeTFT();
-  initializeTouch();
+  // initializeTouch();
 
+  Serial.printf("PSRAM initialized: %s\n", psramInit() ? "yes" : "no");
+  Serial.printf("Total PSRAM: %u bytes\n", ESP.getPsramSize());
+  Serial.printf("Free PSRAM: %u bytes\n", ESP.getFreePsram());
+  Serial.printf("Free heap: %u bytes\n", ESP.getFreeHeap());
   tokenInfo.tokenFileName = "/token.txt";
   tokenInfo.authTokenFileName = "/authtoken.txt";
   tokenInfo.accessTokenFileName = "/accesstoken.txt";
@@ -63,6 +72,7 @@ void setup() {
   }
   tft.println("Spotify tokens initialized");
   SPIFFS.end();
+  Serial.println("[SPIFFS] SPIFFS ended");
   // String reft = getToken(appContext.tokens.refreshTokenFileName);
   // String accesst = getToken(appContext.tokens.accessTokenFileName);
   // Serial.println("[TOKENS] ");
@@ -74,8 +84,9 @@ void setup() {
 
   startSpotifyTask(appContext.tokens);
 
-  drawPlaybackControls(tft);
-  drawInitialProgressBar(tft);
+  // drawPlaybackControls(tft);
+  // drawInitialProgressBar(tft);
+  screenManager.setScreen(&nowPlayingScreen, tft, appContext);
 }
 
 // map coordinates since touches register weird
@@ -100,73 +111,86 @@ void mapTouchCoordinates(int &x, int &y) {
     break;
   }
 }
-
 void loop() {
-  if (xSemaphoreTake(spotifyMutex, 10 / portTICK_PERIOD_MS)) {
-    if (hasSongChanged(playerData, lastPlayerData)) {
-      if (playerData.is_playing) {
-        // tft.fillScreen(TFT_BLACK);
-        // clear image and text
-        tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
-
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
-        tft.setTextSize(2);
-        tft.setCursor(330, 0);
-        tft.setTextSize(1);
-        tft.println(playerData.name);
-        tft.setCursor(330, 10);
-        tft.println(playerData.artist);
-        tft.setCursor(330, 20);
-        tft.println(playerData.progress_ms / 1000);
-
-        String rawUrl = "http://rsdfgiws.rakibshahid.com/raw?url=" +
-                        playerData.album_art_url;
-        drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
-      } else {
-        tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
-        tft.setTextSize(2);
-        tft.setCursor(330, 0);
-        tft.setTextSize(1);
-        tft.println("Paused");
-      }
-    }
-    if (playerData.is_playing &&
-        hasProgressChanged(playerData, lastPlayerData)) {
-      drawProgressBar(tft, playerData, lastPlayerData);
-    }
-    lastPlayerData = playerData;
-    xSemaphoreGive(spotifyMutex);
-  }
+  screenManager.update(tft, appContext);
 
   if (touch.touched()) {
     TS_Point p = touch.getPoint();
     int x = p.x;
     int y = p.y;
     mapTouchCoordinates(x, y);
-    // ignore noise
+
     if (x > 3 && x < 477 && y > 2 && y < 318) {
-      ButtonRegion region = getButtonRegion(x, y);
-
-      if (!wasTouched) {
-        wasTouched = true;
-
-        if (region != NONE) {
-          activeButton = region;
-          digitalWrite(ledPin, HIGH);
-          handlePlaybackControls(appContext.tokens, region, x, y);
-        }
-      } else {
-        if (region == NONE) {
-          // Serial.printf("Touch at: %d, %d\n", x, y);
-          // tft.fillCircle(x, y, 2, TFT_WHITE);
-          digitalWrite(ledPin, HIGH);
-        }
-      }
+      screenManager.handleTouch(x, y, appContext);
     }
-  } else {
-    wasTouched = false;
-    activeButton = NONE;
-    digitalWrite(ledPin, LOW);
   }
 }
+// void loop() {
+//   if (xSemaphoreTake(spotifyMutex, 10 / portTICK_PERIOD_MS)) {
+//     if (hasSongChanged(playerData, lastPlayerData)) {
+//       if (playerData.is_playing) {
+//         // tft.fillScreen(TFT_BLACK);
+//         // clear image and text
+//         tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
+//
+//         tft.setTextColor(TFT_WHITE, TFT_BLACK);
+//         tft.setTextSize(2);
+//         tft.setCursor(330, 0);
+//         tft.setTextSize(1);
+//         tft.println(playerData.name);
+//         tft.setCursor(330, 10);
+//         tft.println(playerData.artist);
+//         tft.setCursor(330, 20);
+//         tft.println(playerData.progress_ms / 1000);
+//
+//         String rawUrl = "http://rsdfgiws.rakibshahid.com/raw?url=" +
+//                         playerData.album_art_url;
+//         drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
+//       } else {
+//         tft.fillRect(0, 0, tft.width(), 210, TFT_BLACK);
+//         tft.setTextColor(TFT_WHITE, TFT_BLACK);
+//         tft.setTextSize(2);
+//         tft.setCursor(330, 0);
+//         tft.setTextSize(1);
+//         tft.println("Paused");
+//       }
+//     }
+//     if (playerData.is_playing &&
+//         hasProgressChanged(playerData, lastPlayerData)) {
+//       drawProgressBar(tft, playerData, lastPlayerData);
+//     }
+//     lastPlayerData = playerData;
+//     xSemaphoreGive(spotifyMutex);
+//   }
+//
+//   if (touch.touched()) {
+//     TS_Point p = touch.getPoint();
+//     int x = p.x;
+//     int y = p.y;
+//     mapTouchCoordinates(x, y);
+//     // ignore noise
+//     if (x > 3 && x < 477 && y > 2 && y < 318) {
+//       ButtonRegion region = getButtonRegion(x, y);
+//
+//       if (!wasTouched) {
+//         wasTouched = true;
+//
+//         if (region != NONE) {
+//           activeButton = region;
+//           digitalWrite(ledPin, HIGH);
+//           handlePlaybackControls(appContext.tokens, region, x, y);
+//         }
+//       } else {
+//         if (region == NONE) {
+//           // Serial.printf("Touch at: %d, %d\n", x, y);
+//           // tft.fillCircle(x, y, 2, TFT_WHITE);
+//           digitalWrite(ledPin, HIGH);
+//         }
+//       }
+//     }
+//   } else {
+//     wasTouched = false;
+//     activeButton = NONE;
+//     digitalWrite(ledPin, LOW);
+//   }
+// }

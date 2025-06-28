@@ -28,7 +28,8 @@ void NowPlayingScreen::update(TFT_eSPI &tft, AppContext &ctx) {
 
       String rawUrl =
           "http://rsdfgiws.rakibshahid.com/raw?url=" + playerData.album_art_url;
-      drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
+      // drawRawImageFromURL(tft, rawUrl.c_str(), 0, 0);
+      drawRawImageWithSprite(tft, rawUrl.c_str(), 0, 0);
     }
     if (playerData.is_playing &&
         hasProgressChanged(playerData, lastPlayerData)) {

@@ -4,7 +4,7 @@
 #include <HTTPClient.h>
 #define IMG_BUF_SIZE (190 * 190 * 2)
 
-uint16_t imageBuffer[IMG_BUF_SIZE / 2];
+uint16_t imageBuffer[0];
 
 // unused afaik, old manual decode
 void drawPNGFromURL(TFT_eSPI &tft, const char *url, int16_t x, int16_t y) {
@@ -109,5 +109,65 @@ bool drawRawImageFromURL(TFT_eSPI &tft, const char *url, int16_t x, int16_t y) {
   http.end();
 
   Serial.printf("[RAW] Drew image %dx%d at (%d, %d)\n", width, height, x, y);
+  return true;
+}
+
+bool drawRawImageWithSprite(TFT_eSPI &tft, const char *url, int16_t x,
+                            int16_t y) {
+  HTTPClient http;
+  http.begin(url);
+  int httpCode = http.GET();
+
+  if (httpCode != HTTP_CODE_OK) {
+    Serial.printf("[RAW] HTTP GET failed: %d\n", httpCode);
+    http.end();
+    return false;
+  }
+
+  WiFiClient *stream = http.getStreamPtr();
+  if (http.getSize() <= 4) {
+    Serial.println("[RAW] Invalid image size");
+    http.end();
+    return false;
+  }
+
+  uint8_t header[4];
+  if (stream->readBytes(header, 4) != 4) {
+    Serial.println("[RAW] Failed to read header");
+    http.end();
+    return false;
+  }
+
+  int width = (header[0] << 8) | header[1];
+  int height = (header[2] << 8) | header[3];
+  int pixels = width * height;
+  int dataLen = pixels * 2;
+
+  TFT_eSprite sprite = TFT_eSprite(&tft);
+  sprite.setColorDepth(16);
+  sprite.setSwapBytes(true); // RGB565 format
+
+  if (!sprite.createSprite(width, height)) {
+    Serial.println("[SPRITE] Failed to create sprite");
+    http.end();
+    return false;
+  }
+
+  // get raw buffer
+  uint16_t *buf = (uint16_t *)sprite.getPointer();
+  int bytesRead = stream->readBytes((uint8_t *)buf, dataLen);
+  if (bytesRead != dataLen) {
+    Serial.printf("[RAW] Incomplete read: got %d / %d\n", bytesRead, dataLen);
+    sprite.deleteSprite();
+    http.end();
+    return false;
+  }
+
+  sprite.pushSprite(x, y);
+  sprite.deleteSprite();
+  http.end();
+
+  Serial.printf("[SPRITE] Drew sprite %dx%d at (%d, %d)\n", width, height, x,
+                y);
   return true;
 }
