@@ -25,7 +25,7 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   initializeTFT();
-  // initializeTouch();
+  initializeTouch();
 
   Serial.printf("PSRAM initialized: %s\n", psramInit() ? "yes" : "no");
   Serial.printf("Total PSRAM: %u bytes\n", ESP.getPsramSize());
