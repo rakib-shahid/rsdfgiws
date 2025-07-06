@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/AppContext.h"
 #include "Spotify/SpotifyTypes.h"
 #include "Spotify/TokenManager.h"
 #include "TFTSetup.h"
@@ -28,4 +29,4 @@ bool hasProgressChanged(const PlayerData &current, const PlayerData &previous);
 #include <Arduino.h>
 
 extern SemaphoreHandle_t spotifyMutex;
-void startSpotifyTask(TokenInfo &tokenInfo);
+void startSpotifyTask(AppContext &appContext);

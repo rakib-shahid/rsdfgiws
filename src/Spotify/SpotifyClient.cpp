@@ -1,4 +1,5 @@
 #include "Spotify/SpotifyClient.h"
+#include "Core/AppContext.h"
 #include "Secrets.h"
 #include "Spotify/TokenManager.h"
 
@@ -22,11 +23,12 @@ SemaphoreHandle_t spotifyMutex;
 HTTPClient playingTrackHttpClient;
 
 void spotifyTask(void *parameter) {
-  TokenInfo *tokenInfo = static_cast<TokenInfo *>(parameter);
+  AppContext *appContext = static_cast<AppContext *>(parameter);
+  TokenInfo tokenInfo = appContext->tokens;
   while (true) {
     if (WiFi.status() == WL_CONNECTED) {
       if (xSemaphoreTake(spotifyMutex, 1000 / portTICK_PERIOD_MS)) {
-        getCurrentlyPlayingTrack(*tokenInfo);
+        getCurrentlyPlayingTrack(tokenInfo);
         xSemaphoreGive(spotifyMutex);
       }
     }
@@ -35,12 +37,12 @@ void spotifyTask(void *parameter) {
   }
 }
 
-void startSpotifyTask(TokenInfo &tokenInfo) {
+void startSpotifyTask(AppContext &appContext) {
   spotifyMutex = xSemaphoreCreateMutex();
   xTaskCreatePinnedToCore(spotifyTask,    // function
                           "Spotify Task", // name
                           8192,           // stack size
-                          &tokenInfo,     // param
+                          &appContext,    // param
                           1,              // priority
                           NULL,           // handle
                           1               // core ID (run on core 1)
